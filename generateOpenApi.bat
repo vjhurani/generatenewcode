@@ -1,0 +1,1 @@
+java -jar openapi-generator-cli.jar   -g spring -i customer.yaml -o c:\outputFolder\customer -c config.json

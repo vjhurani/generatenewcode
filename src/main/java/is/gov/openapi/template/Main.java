@@ -1,10 +1,10 @@
 package is.gov.openapi.template;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,28 +15,85 @@ import com.google.gson.Gson;
 public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
 
+        String outputFolder = "c:\\outputFolder\\";
         var url = ClassLoader.getSystemResource("").getPath();
         ObjectMapper objectMapper = new ObjectMapper();
-        Config config = objectMapper.readValue(new File(url + "open-api/config_updated.json"), Config.class);
+        Config config = objectMapper.readValue(new File(url + "open-api/config_updated.json"),
+         Config.class);
         File directoryPath = new File(url + "open-api/yaml");
         //List of all files and directories
         File filesList[] = directoryPath.listFiles();
-        String basePath = "irs.gov.webapps";
+        String basePackage = "irs.gov.webapps";
         for (File file : filesList) {
-            config.setBasePackage(basePath);
-            config.setConfigPackage(basePath + "." + file.getName() + ".config");
-            config.setModelPackage(basePath + "." + file.getName() + ".model");
-            config.setApiPackage(basePath + "." + file.getName() + ".api");
+            config.setBasePackage(basePackage);
+            config.setConfigPackage(basePackage + "." + file.getName() + ".config");
+            config.setModelPackage(basePackage + "." + file.getName() + ".model");
+            config.setApiPackage(basePackage + "." + file.getName() + ".api");
             ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
             String json = ow.writeValueAsString(config);
             Gson gson = new Gson();
-            ProcessBuilder processBuilder = new ProcessBuilder();
-            processBuilder.command("cd open-api");
-            processBuilder.command("java -jar openapi-generator-cli.jar  generate -g spring -i " + file.getName() + ".yaml "  + "-o " + file.getName() + " -c config.json ");
-            Process process = processBuilder.start();
-            process.waitFor();
-            File fileToDelete = new File(url + "open-api/config.json");
+           // gson.toJson(config, new FileWriter(url + "open-api/config.json"));
+            FileWriter fw = new FileWriter(url + "open-api/config.json");
+            gson.toJson(config, fw);
+            fw.close();
+            //String baseFilePath =  url.substring(1).replace("/","\\") + "open-api\\";
+//            String jarFilePath = baseFilePath + "openapi-generator-cli.jar ";
+//            String yamlFile = baseFilePath + file.getName();
+//            String configFilePath = baseFilePath + "config.json";
+//            String batchFilePath = baseFilePath + "generateOpenApi.bat";
+//            String outPutFolderPath = outputFolder+ file.getName().replace(".yaml", "");
+            String baseFilePath =  url .substring(1).replace("/","\\") + "open-api\\";
+            String jarFilePath =  "openapi-generator-cli.jar ";
+            String yamlFile =  file.getName();
+            String configFilePath =  "config.json";
+            String batchFilePath =  baseFilePath + "generateOpenApi.bat";
+            String outPutFolderPath = outputFolder+ file.getName().replace(".yaml", "");
+
+            String comm = "java -jar " + jarFilePath + "   generate -g spring -i " + yamlFile  + " -o " + outPutFolderPath + " -c " + configFilePath;
+            BufferedWriter myWriter = new BufferedWriter(new FileWriter(batchFilePath));
+            myWriter.write(comm);
+            myWriter.newLine();
+            myWriter.write("exit");
+            myWriter.close();
+
+
+            ProcessBuilder processBuilder = new ProcessBuilder("cmd", "/c", "generateOpenApi.bat");
+            processBuilder.directory(new File(url + "open-api"));
+            //String comm = "  -g spring -i " + file.getName()   + " -o " + outputFolder+ file.getName().replace(".yaml", "") + " -c config.json ";
+            //processBuilder.command("./generateOpenApi.bat");
+            //processBuilder.command("java" ," -jar " , jarFilePath , " generate ", " -g spring -i " ,yamlFile , " -o " , outPutFolderPath , " -c " , configFilePath);
+            try {
+                Process process = processBuilder.start();
+                int exit = process.waitFor();
+            }
+            catch (Exception ex){
+                System.out.println(ex);
+            }
+            File fileToDelete = new File(configFilePath);
             fileToDelete.delete();
+            fileToDelete =  new File(batchFilePath);
+           fileToDelete.delete();
         }
     }
+
+    public static void executeJar( List<String> args) throws Exception {
+        // Create run arguments for the
+
+
+        try {
+            final Runtime re = Runtime.getRuntime();
+            //final Process command = re.exec(cmdString, args.toArray(new String[0]));
+            final Process command = re.exec(args.toArray(new String[0]));
+            BufferedReader error = new BufferedReader(new InputStreamReader(command.getErrorStream()));
+            BufferedReader op = new BufferedReader(new InputStreamReader(command.getInputStream()));
+            // Wait for the application to Finish
+            command.waitFor();
+            int exitVal = command.exitValue();
+
+
+        } catch (final IOException | InterruptedException e) {
+            throw new Exception(e);
+        }
+    }
+
     }
