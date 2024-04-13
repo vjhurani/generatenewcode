@@ -63,7 +63,15 @@ public class Main {
             //processBuilder.command("./generateOpenApi.bat");
             //processBuilder.command("java" ," -jar " , jarFilePath , " generate ", " -g spring -i " ,yamlFile , " -o " , outPutFolderPath , " -c " , configFilePath);
             try {
+                processBuilder.redirectErrorStream(true);
                 Process process = processBuilder.start();
+
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                String line;
+                while ((line = reader.readLine()) != null)
+                    System.out.println("tasklist: " + line);
+                process.waitFor();
                 int exit = process.waitFor();
             }
             catch (Exception ex){
