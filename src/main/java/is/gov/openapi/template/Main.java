@@ -16,6 +16,9 @@ public class Main {
     public static void main(String[] args) throws IOException, InterruptedException {
 
         String outputFolder = "c:\\outputFolder\\";
+        if(args != null && args.length > 0){
+            outputFolder = args[0];
+        }
         var url = ClassLoader.getSystemResource("").getPath();
         ObjectMapper objectMapper = new ObjectMapper();
         Config config = objectMapper.readValue(new File(url + "open-api/config_updated.json"),
@@ -49,7 +52,7 @@ public class Main {
             String batchFilePath =  baseFilePath + "generateOpenApi.bat";
             String outPutFolderPath = outputFolder+ file.getName().replace(".yaml", "");
 
-            String comm = "java -jar " + jarFilePath + "   generate -g spring -i " + yamlFile  + " -o " + outPutFolderPath + " -c " + configFilePath;
+            String comm = "java -jar " + jarFilePath + "   generate -g spring-boot -i " + yamlFile  + " -o " + outPutFolderPath + " -c " + configFilePath;
             BufferedWriter myWriter = new BufferedWriter(new FileWriter(batchFilePath));
             myWriter.write(comm);
             myWriter.newLine();
